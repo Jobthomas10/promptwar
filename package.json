@@ -1,12 +1,14 @@
 {
-  "name": "janmitra-ai",
-  "version": "0.1.0",
+  "name": "verify-ai",
+  "version": "2.4.0",
+  "description": "VerifyAI - GenAI Media Forensic Platform & Synthetic Media Verification Engine",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test __tests__/*.test.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.2",

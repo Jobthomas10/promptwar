@@ -1,25 +1,52 @@
 import { NextResponse } from 'next/server';
 import { MOCK_ANALYSES, generateCustomAnalysis } from '@/lib/mockData';
-import { AnalysisResult } from '@/lib/types';
+import { AnalysisResult, MediaType } from '@/lib/types';
 
 const SIGHTENGINE_API_USER = process.env.SIGHTENGINE_API_USER || '1895648941';
 const SIGHTENGINE_API_SECRET = process.env.SIGHTENGINE_API_SECRET || '6E6oGDtJj8FCewXHwWDF2kesUVWo4ySa';
 
+/**
+ * Sanitizes input strings to prevent XSS or path injection attacks.
+ */
+function sanitizeInput(str: string): string {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case "'": return '&#39;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  }).slice(0, 500);
+}
+
+/**
+ * POST /api/analyze
+ * Ingests media file or URL, runs live Sightengine AI Detection API check or local fallback forensic engine,
+ * and returns structured AnalysisResult containing telemetry, evidence, provenance, and verdict.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const { filename, mediaType, mediaUrl, fileSize, resolutionOrDuration, scanProfile, presetId } = body;
 
-    // Handle demo presets
-    if (presetId && MOCK_ANALYSES[presetId]) {
+    // Handle demo preset selection with security validation
+    if (presetId && typeof presetId === 'string' && MOCK_ANALYSES[presetId]) {
       return NextResponse.json({
         success: true,
         data: MOCK_ANALYSES[presetId]
       });
     }
 
-    const type = mediaType || 'image';
-    const name = filename || 'uploaded_media.png';
+    // Input Validation & Normalization
+    const validMediaType: MediaType = (mediaType === 'audio' || mediaType === 'video') ? mediaType : 'image';
+    const cleanFilename = sanitizeInput(filename || 'uploaded_media.png');
+    const cleanFileSize = sanitizeInput(fileSize || '14.8 MB');
+    const cleanSpecs = sanitizeInput(resolutionOrDuration || '3840 x 2160 pixels');
+    const validScanProfile: 'authentic' | 'manipulated' | 'auto' = 
+      (scanProfile === 'authentic' || scanProfile === 'manipulated') ? scanProfile : 'auto';
 
     const sightFormData = new FormData();
     sightFormData.append('models', 'genai,deepfake');
@@ -28,22 +55,31 @@ export async function POST(request: Request) {
 
     let hasMediaToScan = false;
 
+    // Process base64 data URLs
     if (mediaUrl && typeof mediaUrl === 'string' && mediaUrl.startsWith('data:image')) {
       try {
         const base64Parts = mediaUrl.split(',');
         const mimeMatch = mediaUrl.match(/data:(.*?);/);
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
         const base64Data = base64Parts[1];
-        if (base64Data) {
+        
+        // Input validation: Enforce maximum payload buffer limit (25MB)
+        if (base64Data && base64Data.length < 35 * 1024 * 1024) {
           const buffer = Buffer.from(base64Data, 'base64');
           const blob = new Blob([buffer], { type: mimeType });
-          sightFormData.append('media', blob, name);
+          sightFormData.append('media', blob, cleanFilename);
           hasMediaToScan = true;
         }
       } catch (err) {
-        console.error('Error creating blob from base64 data URL:', err);
+        console.error('Error creating binary blob from base64 data URL:', err);
       }
-    } else if (mediaUrl && typeof mediaUrl === 'string' && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) && !mediaUrl.includes('unsplash') && !mediaUrl.includes('actions.google')) {
+    } else if (
+      mediaUrl && 
+      typeof mediaUrl === 'string' && 
+      (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) && 
+      !mediaUrl.includes('unsplash') && 
+      !mediaUrl.includes('actions.google')
+    ) {
       sightFormData.append('url', mediaUrl);
       hasMediaToScan = true;
     }
@@ -66,9 +102,9 @@ export async function POST(request: Request) {
             );
 
             let isFake = false;
-            if (scanProfile === 'manipulated') {
+            if (validScanProfile === 'manipulated') {
               isFake = true;
-            } else if (scanProfile === 'authentic') {
+            } else if (validScanProfile === 'authentic') {
               isFake = false;
             } else {
               // 'auto' mode: Use Sightengine AI model score threshold (> 0.35 is synthetic AI media)
@@ -80,24 +116,24 @@ export async function POST(request: Request) {
 
             const result: AnalysisResult = {
               id: `VAI-${Math.floor(1000 + Math.random() * 9000)}-API`,
-              filename: name,
-              mediaType: type,
-              fileSize: fileSize || '14.8 MB',
-              resolutionOrDuration: resolutionOrDuration || '3840 x 2160 pixels',
+              filename: cleanFilename,
+              mediaType: validMediaType,
+              fileSize: cleanFileSize,
+              resolutionOrDuration: cleanSpecs,
               uploadDate: new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC',
-              mediaUrl,
-              thumbnailUrl: mediaUrl,
+              mediaUrl: typeof mediaUrl === 'string' ? mediaUrl : undefined,
+              thumbnailUrl: typeof mediaUrl === 'string' ? mediaUrl : undefined,
 
               verdict: isFake ? 'STRONG_EVIDENCE_SYNTHETIC' : 'LIKELY_AUTHENTIC',
               verdictLabel: isFake ? 'STRONG EVIDENCE OF SYNTHETIC MEDIA' : 'LIKELY AUTHENTIC',
               confidenceScore: scorePercent,
               evidenceStrength: 'HIGH',
               whatThisMeans: isFake
-                ? `Sightengine AI Detection API flagged generative AI signatures (${scorePercent}%) for "${name}". Neural latent diffusion grid artifacts, non-natural spatial noise, and missing camera sensor PRNU were identified.`
-                : `Sightengine AI Detection API confirmed authentic photo probabilities (${scorePercent}%) for "${name}". Sensor noise PRNU and optical lighting coherence match physical camera hardware.`,
+                ? `Sightengine AI Detection API flagged generative AI signatures (${scorePercent}%) for "${cleanFilename}". Neural latent diffusion grid artifacts, non-natural spatial noise, and missing camera sensor PRNU were identified.`
+                : `Sightengine AI Detection API confirmed authentic photo probabilities (${scorePercent}%) for "${cleanFilename}". Sensor noise PRNU and optical lighting coherence match physical camera hardware.`,
               finalRecommendation: isFake
-                ? `STRONG EVIDENCE OF SYNTHETIC MEDIA: "${name}" exhibits generative AI model artifacts. Validate source before citing.`
-                : `LIKELY AUTHENTIC: "${name}" passed AI detection filters. Standard media guidelines apply.`,
+                ? `STRONG EVIDENCE OF SYNTHETIC MEDIA: "${cleanFilename}" exhibits generative AI model artifacts. Validate source before citing.`
+                : `LIKELY AUTHENTIC: "${cleanFilename}" passed AI detection filters. Standard media guidelines apply.`,
 
               aiGenerationScore: isFake ? scorePercent : Math.max(Math.round(aiScoreRaw * 100), 4),
               manipulationScore: isFake ? Math.max(scorePercent - 5, 84) : 6,
@@ -122,7 +158,7 @@ export async function POST(request: Request) {
               ],
 
               metadataFields: [
-                { key: 'File Name', value: name, status: isFake ? 'suspicious' : 'verified' },
+                { key: 'File Name', value: cleanFilename, status: isFake ? 'suspicious' : 'verified' },
                 { key: 'Detection API Engine', value: 'Sightengine AI GenAI & Deepfake v1.0', status: 'verified' },
                 { key: 'API User ID', value: SIGHTENGINE_API_USER, status: 'verified' },
                 { key: 'AI Probability Score', value: `${scorePercent}%`, status: isFake ? 'suspicious' : 'verified' }
@@ -132,9 +168,9 @@ export async function POST(request: Request) {
                 {
                   id: 'sc-api-1',
                   date: new Date().toISOString().substring(0, 10),
-                  name: `Ingested File: ${name}`,
+                  name: `Ingested File: ${cleanFilename}`,
                   type: 'upload',
-                  url: mediaUrl,
+                  url: typeof mediaUrl === 'string' ? mediaUrl : '#',
                   author: 'API Submission',
                   similarityScore: 100,
                   credibility: isFake ? 'Low' : 'High',
@@ -149,18 +185,18 @@ export async function POST(request: Request) {
           }
         }
       } catch (err) {
-        console.error('Sightengine API call failed, falling back to local verification:', err);
+        console.error('Sightengine API call failed, falling back to local forensic engine:', err);
       }
     }
 
-    // Local fallback analysis
+    // Local fallback analysis engine
     const result = generateCustomAnalysis(
-      name,
-      type,
-      mediaUrl,
-      fileSize,
-      resolutionOrDuration,
-      scanProfile || 'auto'
+      cleanFilename,
+      validMediaType,
+      typeof mediaUrl === 'string' ? mediaUrl : undefined,
+      cleanFileSize,
+      cleanSpecs,
+      validScanProfile
     );
 
     return NextResponse.json({
@@ -170,7 +206,7 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Analysis failed' },
+      { success: false, error: sanitizeInput(error.message || 'Analysis failed') },
       { status: 500 }
     );
   }
