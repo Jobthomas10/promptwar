@@ -44,7 +44,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     if (file.type.startsWith('audio/')) type = 'audio';
     else if (file.type.startsWith('video/')) type = 'video';
     else if (file.type.startsWith('image/')) type = 'image';
-    else if (file.name.match(/\.(mp4|webm|mov|avi)$/i)) type = 'video';
+    else if (file.name.match(/\.(mp4|webm|mov|avi|mkv)$/i)) type = 'video';
     else if (file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) type = 'audio';
 
     const formattedSize = file.size > 1024 * 1024 
@@ -53,19 +53,33 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
     setSelectedMediaType(type);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    const objectUrl = URL.createObjectURL(file);
+    const specs = type === 'image' ? 'Original Resolution' : type === 'video' ? '1080p @ 60fps • 00:30' : '44.1 kHz PCM • 00:20';
+
+    if (type === 'image' && file.size < 8 * 1024 * 1024) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setStagedFile({
+          name: file.name,
+          size: formattedSize,
+          type: type,
+          previewUrl: dataUrl,
+          resolution: specs,
+          duration: type === 'audio' ? '00:24' : type === 'video' ? '00:30' : undefined
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
       setStagedFile({
         name: file.name,
         size: formattedSize,
         type: type,
-        previewUrl: dataUrl,
-        resolution: type === 'image' ? 'Original Resolution' : type === 'video' ? 'Video Stream' : 'Audio Stream',
+        previewUrl: objectUrl,
+        resolution: specs,
         duration: type === 'audio' ? '00:24' : type === 'video' ? '00:30' : undefined
       });
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +147,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         body: JSON.stringify({
           filename: stagedFile.name,
           mediaType: stagedFile.type,
-          mediaUrl: stagedFile.previewUrl,
+          mediaUrl: stagedFile.previewUrl.startsWith('data:') ? stagedFile.previewUrl : undefined,
           fileSize: stagedFile.size,
           resolutionOrDuration: stagedFile.resolution,
           scanProfile
@@ -141,6 +155,8 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       });
       const json = await res.json();
       if (json.success && json.data) {
+        json.data.mediaUrl = stagedFile.previewUrl;
+        json.data.thumbnailUrl = stagedFile.previewUrl;
         onStartProcessing(json.data);
         return;
       }

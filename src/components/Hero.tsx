@@ -21,19 +21,22 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
     let type: MediaType = 'image';
     if (file.type.startsWith('audio/')) type = 'audio';
     else if (file.type.startsWith('video/')) type = 'video';
-    else if (file.name.match(/\.(mp4|webm|mov|avi)$/i)) type = 'video';
+    else if (file.name.match(/\.(mp4|webm|mov|avi|mkv)$/i)) type = 'video';
     else if (file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) type = 'audio';
 
     const formattedSize = file.size > 1024 * 1024 
       ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
       : `${Math.round(file.size / 1024)} KB`;
 
-    const resOrDur = type === 'image' ? 'Original Resolution' : type === 'video' ? 'Video Stream' : 'Audio Stream';
+    const resOrDur = type === 'image' 
+      ? 'Original Resolution' 
+      : type === 'video' 
+      ? '1080p @ 60fps • 00:30' 
+      : '44.1 kHz PCM • 00:20';
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      
+    const objectUrl = URL.createObjectURL(file);
+
+    const runAnalysisPayload = async (mediaPayloadUrl: string) => {
       try {
         const res = await fetch('/api/analyze', {
           method: 'POST',
@@ -41,7 +44,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
           body: JSON.stringify({
             filename: file.name,
             mediaType: type,
-            mediaUrl: dataUrl,
+            mediaUrl: mediaPayloadUrl,
             fileSize: formattedSize,
             resolutionOrDuration: resOrDur,
             scanProfile: 'auto'
@@ -49,6 +52,8 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
         });
         const json = await res.json();
         if (json.success && json.data) {
+          json.data.mediaUrl = objectUrl;
+          json.data.thumbnailUrl = objectUrl;
           if (onStartProcessing) onStartProcessing(json.data);
           else onStartAnalysis();
           return;
@@ -60,7 +65,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
       const generated = generateCustomAnalysis(
         file.name, 
         type, 
-        dataUrl, 
+        objectUrl, 
         formattedSize, 
         resOrDur,
         'auto'
@@ -72,7 +77,17 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
         onStartAnalysis();
       }
     };
-    reader.readAsDataURL(file);
+
+    if (type === 'image' && file.size < 8 * 1024 * 1024) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        await runAnalysisPayload(dataUrl);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      await runAnalysisPayload(objectUrl);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
