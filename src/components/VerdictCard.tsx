@@ -61,15 +61,24 @@ export const VerdictCard: React.FC<VerdictCardProps> = ({ analysis }) => {
         
         {/* Left Column: Media Preview */}
         <div className="lg:col-span-4 flex flex-col items-center">
-          <div className="w-full aspect-video rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative shadow-inner group flex items-center justify-center">
+          <div className="w-full aspect-video rounded-xl bg-slate-900 border border-slate-200 overflow-hidden relative shadow-inner group flex items-center justify-center">
             {analysis.mediaType === 'audio' ? (
-              <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-slate-100">
                 <div className="w-12 h-12 rounded-xl bg-white border border-emerald-300 flex items-center justify-center text-emerald-600 mb-2 shadow-sm">
                   <FileText className="w-6 h-6" />
                 </div>
                 <span className="text-xs font-mono text-slate-900 font-bold">{analysis.filename}</span>
                 <span className="text-[10px] font-mono text-slate-500 mt-1">{analysis.resolutionOrDuration}</span>
               </div>
+            ) : analysis.mediaType === 'video' ? (
+              <video 
+                src={analysis.mediaUrl} 
+                controls 
+                autoPlay 
+                muted 
+                loop 
+                className="w-full h-full object-cover" 
+              />
             ) : (
               <img 
                 src={analysis.mediaUrl} 
@@ -78,10 +87,10 @@ export const VerdictCard: React.FC<VerdictCardProps> = ({ analysis }) => {
               />
             )}
             
-            <div className="absolute top-2 left-2 px-2 py-1 rounded bg-slate-900 text-white text-[10px] font-mono font-bold uppercase">
+            <div className="absolute top-2 left-2 px-2 py-1 rounded bg-slate-900 text-white text-[10px] font-mono font-bold uppercase z-10">
               {analysis.mediaType.toUpperCase()}
             </div>
-            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-slate-900/80 text-[10px] font-mono text-slate-200">
+            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-slate-900/80 text-[10px] font-mono text-slate-200 z-10">
               {analysis.fileSize}
             </div>
           </div>

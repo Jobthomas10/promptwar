@@ -649,13 +649,13 @@ export function generateCustomAnalysis(
   const lowerName = (filename + ' ' + (mediaUrl || '')).toLowerCase();
   
   const aiKeywords = [
-    'ai', 'gen', 'synthetic', 'midjourney', 'dalle', 'dall-e', 'diffusion', 
-    'fake', 'deepfake', 'clone', 'swap', 'generated', 'prompt', 'art', 'render', 
-    'stable', 'flux', 'sdxl', 'copilot', 'chatgpt', 'bing', 'nightcafe', 'leonardo', 
-    'image_fx', 'imagen', 'v6', 'stylegan'
+    'genai', 'synthetic', 'midjourney', 'dalle', 'dall-e', 'diffusion', 
+    'deepfake', 'face-swap', 'faceswap', 'voiceclone', 'generated', 'prompt', 
+    'stable-diffusion', 'flux', 'sdxl', 'nightcafe', 'leonardo', 
+    'image_fx', 'imagen', 'stylegan'
   ];
 
-  const hasAiSignal = aiKeywords.some(kw => lowerName.includes(kw));
+  const hasAiSignal = aiKeywords.some(kw => lowerName.includes(kw)) || /\b(ai|fake|gen|art|render|v6)\b/i.test(lowerName);
 
   let isSynthetic = false;
   if (forceVerdict === 'manipulated') {
@@ -663,9 +663,8 @@ export function generateCustomAnalysis(
   } else if (forceVerdict === 'authentic') {
     isSynthetic = false;
   } else {
-    // 'auto' mode fallback: if file name or URL contains AI signals, classify as synthetic.
-    // Otherwise default personal/real photos to authentic.
-    isSynthetic = hasAiSignal;
+    // In auto mode for video files (or files with AI signals), return synthetic detection result by default
+    isSynthetic = isVideo || hasAiSignal;
   }
 
   if (!isSynthetic) {
