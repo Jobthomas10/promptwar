@@ -6,25 +6,9 @@ VerifyAI is an enterprise-grade AI Media Forensic Platform designed to detect, e
 
 ---
 
-## 🎯 Evaluation Criteria Compliance Matrix
-
-| Pillar | Criterion | How VerifyAI Achieves Excellence |
-| :--- | :--- | :--- |
-| **01** | **Code Quality** | Clean, modular TypeScript architecture (`/src/app`, `/src/components`, `/src/lib`). Fully typed interfaces, strict ESLint enforcement, JSDoc documentation, and clean separation of concerns. |
-| **02** | **Security** | API credentials strictly encapsulated in server-side routes (`/api/analyze`), input sanitization (`sanitizeInput`), file buffer upload bounds (25MB limit), and HTTP security response headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`). |
-| **03** | **Efficiency** | Zero bloated dependencies, fast Next.js App Router rendering, client-side FileReader streaming, and memory-safe resource disposal. |
-| **04** | **Testing** | 100% passing native automated test suite (`npm test`). Covers API endpoints, preset routes, synthetic AI classification, and authentic photo verification. |
-| **05** | **Accessibility** | Built with WCAG AA compliance. Includes semantic HTML5 tags (`<main>`, `<nav>`, `<header>`, `<footer>`), ARIA landmarks (`role="banner"`, `aria-label`, `aria-live`), and full keyboard focus state rings (`focus-visible:ring-emerald-500`). |
-| **06** | **Problem Alignment** | Directly addresses the global challenge of AI synthetic media & deepfake misattribution through a complete 4-phase framework: **DETECT → EXPLAIN → TRACE → VERIFY**. |
-
 ---
 
-## 🔄 Core 4-Phase Forensic Workflow
 
-1. **DETECT**: Ingests images (JPG, PNG, WEBP), audio (MP3, WAV), or video (MP4, MOV) via local drag-and-drop or public URLs. Queries live Sightengine AI Detection models (`genai,deepfake`).
-2. **EXPLAIN**: Provides Explainable AI (XAI) telemetry detailing 2D Fourier spatial frequency noise grid artifacts, corneal specular reflection vectors, and biomechanical joint tracking.
-3. **TRACE**: Compares media hashes against web archives, historical press agency wire releases, and contextual fact-check databases.
-4. **VERIFY**: Audits C2PA cryptographic hardware certificates, camera EXIF metadata, and generates downloadable verification reports.
 
 ---
 
