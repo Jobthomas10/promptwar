@@ -1,231 +1,254 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  FileCheck2,
-  CheckCircle2,
-  Landmark,
-} from "lucide-react";
-import { EXAMPLE_PROMPTS } from "@/lib/mockData";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
+import React, { useState } from 'react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { Hero } from '@/components/Hero';
+import { TrustSection } from '@/components/TrustSection';
+import { MediaTypesSection } from '@/components/MediaTypesSection';
+import { WhyVeritas } from '@/components/WhyVeritas';
+import { MediaUploader } from '@/components/MediaUploader';
+import { AnalysisProgress } from '@/components/AnalysisProgress';
+import { VerdictCard } from '@/components/VerdictCard';
+import { EvidenceBreakdown } from '@/components/EvidenceBreakdown';
+import { ImageOverlay } from '@/components/ImageOverlay';
+import { AudioWaveform } from '@/components/AudioWaveform';
+import { VideoTimeline } from '@/components/VideoTimeline';
+import { SourceTimeline } from '@/components/SourceTimeline';
+import { ContextVerification } from '@/components/ContextVerification';
+import { MediaComparison } from '@/components/MediaComparison';
+import { EvidenceExplorer } from '@/components/EvidenceExplorer';
+import { GenAIExplanationPanel } from '@/components/GenAIExplanationPanel';
+import { VerificationReport } from '@/components/VerificationReport';
+import { UserDashboard } from '@/components/UserDashboard';
+import { AboutHowItWorks } from '@/components/AboutHowItWorks';
+import { MOCK_ANALYSES } from '@/lib/mockData';
+import { AnalysisResult, MediaType } from '@/lib/types';
+import { AlertTriangle, ShieldCheck, FileText } from 'lucide-react';
 
 export default function Home() {
-  const router = useRouter();
-  const [story, setStory] = useState(
-    "I am a 21-year-old male B.Tech student from Kerala with an annual income of ₹2.5 lakh."
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('landing');
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<MediaType>('image');
+  const [currentAnalysis, setCurrentAnalysis] = useState<AnalysisResult>(MOCK_ANALYSES['demo-video-deepfake']);
+  const [stagedAnalysis, setStagedAnalysis] = useState<AnalysisResult | null>(null);
+  const [resultsSubTab, setResultsSubTab] = useState<'overview' | 'forensics' | 'timeline' | 'context' | 'comparison' | 'explorer' | 'ai_assistant'>('overview');
 
-  const handleChipClick = (text: string) => {
-    setStory(text);
+  const handleStartProcessing = (analysisData: AnalysisResult) => {
+    setStagedAnalysis(analysisData);
+    setActiveTab('processing');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!story.trim()) return;
-    setIsLoading(true);
-  };
-
-  const handleLoadingComplete = (clarifyingAnswer?: string) => {
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("userStory", story);
-      if (clarifyingAnswer) {
-        sessionStorage.setItem("clarification", clarifyingAnswer);
-      }
+  const handleScanComplete = () => {
+    if (stagedAnalysis) {
+      setCurrentAnalysis(stagedAnalysis);
     }
-    // Navigate with URL query string to guarantee story propagation
-    router.push(`/report?story=${encodeURIComponent(story)}`);
+    setActiveTab('results');
+  };
+
+  const handleLoadPreset = (preset: AnalysisResult) => {
+    setStagedAnalysis(preset);
+    setActiveTab('processing');
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Decorative Blur Spheres */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-10 left-1/4 w-[450px] h-[450px] bg-teal-300/30 rounded-full blur-[120px]" />
-        <div className="absolute top-20 right-1/4 w-[500px] h-[500px] bg-indigo-300/30 rounded-full blur-[130px]" />
-      </div>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
+      
+      {/* Top Sticky Navbar */}
+      <Navbar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onStartAnalysis={() => setActiveTab('analyze')}
+      />
 
-      {/* Hero Section */}
-      <section className="pt-12 sm:pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
-        {/* Badge Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100/80 border border-indigo-200 text-indigo-900 text-xs sm:text-sm font-semibold mb-6 shadow-sm"
-        >
-          <Sparkles className="w-4 h-4 text-teal-600 animate-pulse" />
-          <span>Scheme എവിടെ? • Verified Government Benefit Reasoning Engine</span>
-        </motion.div>
+      {/* Main Content Area */}
+      <main className="flex-grow">
 
-        {/* Main Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-4xl sm:text-6xl font-heading font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6"
-        >
-          Discover Verified Government Schemes for Your Family
-        </motion.h1>
-
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10"
-        >
-          Describe your situation in your own words. Scheme എവിടെ? parses 140+ official Government of India & Kerala State gazettes to return verified schemes for your exact profile.
-        </motion.p>
-
-        {/* Main Form Box */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          onSubmit={handleSubmit}
-          className="w-full bg-white rounded-3xl p-4 sm:p-6 shadow-2xl border border-slate-200/90 text-left relative"
-        >
-          <div className="relative">
-            <label
-              htmlFor="story-input"
-              className="block text-xs uppercase font-extrabold tracking-wider text-slate-500 mb-2"
-            >
-              Describe your situation in your own words
-            </label>
-            <textarea
-              id="story-input"
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              rows={4}
-              placeholder="e.g. I am a 21-year-old male B.Tech student from Kerala with an annual income of ₹2.5 lakh."
-              className="w-full text-base sm:text-lg text-slate-900 placeholder:text-slate-400 bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none font-sans leading-relaxed"
+        {/* 1. LANDING PAGE */}
+        {activeTab === 'landing' && (
+          <div className="space-y-0 animate-in fade-in duration-300">
+            <Hero 
+              onStartAnalysis={() => setActiveTab('analyze')}
+              onSeeHowItWorks={() => setActiveTab('how-it-works')}
+              onLoadPreset={handleLoadPreset}
+              onStartProcessing={handleStartProcessing}
             />
-
-            <div className="flex items-center justify-between mt-2 px-1 text-xs text-slate-400">
-              <span>Supports natural English & Malayalam descriptions for any profile</span>
-              <span>{story.length} / 500 chars</span>
-            </div>
+            <TrustSection onStartAnalysis={() => setActiveTab('analyze')} />
+            <MediaTypesSection 
+              onStartAnalysis={(type) => {
+                if (type) setMediaTypeFilter(type);
+                setActiveTab('analyze');
+              }}
+              onLoadPreset={handleLoadPreset}
+            />
+            <WhyVeritas />
           </div>
+        )}
 
-          {/* Example Chips */}
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <span className="text-xs font-semibold text-slate-500 block mb-3">
-              Click any example story below to test dynamic matching:
-            </span>
+        {/* 2. ANALYZE MEDIA PAGE */}
+        {activeTab === 'analyze' && (
+          <div className="animate-in fade-in duration-300">
+            <MediaUploader 
+              initialType={mediaTypeFilter}
+              onStartProcessing={handleStartProcessing}
+              onLoadPreset={handleLoadPreset}
+            />
+          </div>
+        )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {EXAMPLE_PROMPTS.map((prompt, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleChipClick(prompt.prompt || prompt.text)}
-                  className={`text-left p-3 rounded-xl border text-xs transition-all flex items-start justify-between group ${
-                    story === (prompt.prompt || prompt.text)
-                      ? "bg-indigo-50/90 border-indigo-300 ring-2 ring-indigo-500/20 text-indigo-950 font-medium"
-                      : "bg-slate-50/70 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 text-slate-700"
-                  }`}
-                >
-                  <div className="pr-2">
-                    <span className="font-bold text-slate-900 block text-xs">
-                      {prompt.title || prompt.label}
-                    </span>
-                    <span className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-                      "{prompt.prompt || prompt.text}"
+        {/* 3. ANALYSIS PROCESSING PAGE */}
+        {activeTab === 'processing' && (
+          <div className="animate-in fade-in duration-300">
+            <AnalysisProgress 
+              targetResult={stagedAnalysis || currentAnalysis}
+              onComplete={handleScanComplete}
+            />
+          </div>
+        )}
+
+        {/* 4. VERIFICATION RESULTS DASHBOARD */}
+        {activeTab === 'results' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-300">
+            
+            {/* Top Results Navigation Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+              <div>
+                <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase tracking-widest block">
+                  ACTIVE CASE #{currentAnalysis.id}
+                </span>
+                <h1 className="text-2xl font-black text-slate-900">
+                  Verification Dashboard: {currentAnalysis.filename}
+                </h1>
+              </div>
+
+              {/* Sub-tab switcher */}
+              <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full sm:w-auto">
+                {[
+                  { id: 'overview', label: 'Overview & Evidence' },
+                  { id: 'forensics', label: 'Media Forensics' },
+                  { id: 'timeline', label: 'Source Timeline' },
+                  { id: 'context', label: 'Context Claims' },
+                  { id: 'comparison', label: 'Media Comparison' },
+                  { id: 'explorer', label: 'Evidence Explorer' },
+                  { id: 'ai_assistant', label: 'GenAI Assistant' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setResultsSubTab(t.id as any)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all whitespace-nowrap ${
+                      resultsSubTab === t.id
+                        ? 'bg-emerald-600 text-white font-extrabold shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub-Tab 1: Overview & Verdict */}
+            {resultsSubTab === 'overview' && (
+              <div className="space-y-8">
+                <VerdictCard analysis={currentAnalysis} />
+                <EvidenceBreakdown analysis={currentAnalysis} />
+                
+                {/* Embedded Media Specific Forensics */}
+                {currentAnalysis.mediaType === 'image' && <ImageOverlay analysis={currentAnalysis} />}
+                {currentAnalysis.mediaType === 'audio' && <AudioWaveform analysis={currentAnalysis} />}
+                {currentAnalysis.mediaType === 'video' && <VideoTimeline analysis={currentAnalysis} />}
+
+                {/* Final Recommendation Card */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md space-y-3">
+                  <div className="flex items-center space-x-2 text-emerald-700">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    <span className="font-extrabold text-sm uppercase tracking-wider font-mono">
+                      FINAL INVESTIGATIVE RECOMMENDATION
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 shrink-0">
-                    {prompt.badge || prompt.tag}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Primary CTA Submit */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Official Government Gazettes • 100% Verifiable Data</span>
-            </div>
+                  <p className="text-sm text-slate-800 font-semibold leading-relaxed">
+                    {currentAnalysis.finalRecommendation}
+                  </p>
 
-            <button
-              type="submit"
-              disabled={!story.trim()}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl gradient-score text-white font-heading font-bold text-base shadow-xl shadow-indigo-950/20 hover:shadow-indigo-950/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none group"
-            >
-              <span>Find My Benefits</span>
-              <ArrowRight className="w-5 h-5 text-teal-300 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </motion.form>
-      </section>
+                  <div className="pt-2 border-t border-slate-100 text-xs text-amber-700 font-mono font-medium flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span>Important: Automated analysis is probabilistic and should not replace human verification.</span>
+                  </div>
+                </div>
 
-      {/* Feature Pillars / Trust Section */}
-      <section className="py-16 bg-white border-y border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-              Scheme എവിടെ? Verification Protocol
-            </h2>
-            <p className="text-slate-600 text-base mt-2">
-              Every scheme recommendation is cross-referenced with statutory rules from official portals before being recommended.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-2xl bg-teal-100 border border-teal-200 flex items-center justify-center text-teal-700 mb-6">
-                <Landmark className="w-6 h-6" />
+                <div className="flex justify-end space-x-3 pt-2">
+                  <button
+                    onClick={() => setActiveTab('report')}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-black text-xs hover:bg-emerald-700 transition-all flex items-center space-x-2 shadow-md"
+                  >
+                    <FileText className="w-4 h-4 text-white" />
+                    <span>Generate Full Journalistic Report</span>
+                  </button>
+                </div>
               </div>
-              <h3 className="text-xl font-heading font-bold text-slate-900 mb-3">
-                100% Official Source Data
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Indexed directly from Kerala Social Justice, e-Grantz, Sevana, PM-KISAN, NSP, and Civil Supplies official databases.
-              </p>
-            </div>
+            )}
 
-            <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 mb-6">
-                <FileCheck2 className="w-6 h-6" />
+            {/* Sub-Tab 2: Forensics */}
+            {resultsSubTab === 'forensics' && (
+              <div>
+                {currentAnalysis.mediaType === 'image' && <ImageOverlay analysis={currentAnalysis} />}
+                {currentAnalysis.mediaType === 'audio' && <AudioWaveform analysis={currentAnalysis} />}
+                {currentAnalysis.mediaType === 'video' && <VideoTimeline analysis={currentAnalysis} />}
               </div>
-              <h3 className="text-xl font-heading font-bold text-slate-900 mb-3">
-                Clause-Level Citations
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Every recommended scheme cites exact rule numbers and statutory government orders so officials cannot arbitrarily reject applications.
-              </p>
-            </div>
+            )}
 
-            <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 mb-6">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-heading font-bold text-slate-900 mb-3">
-                Dynamic Profile Matching
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Evaluates every criteria field (Age, Income, Gender, Course, Occupation) dynamically for any citizen profile.
-              </p>
-            </div>
+            {/* Sub-Tab 3: Timeline */}
+            {resultsSubTab === 'timeline' && <SourceTimeline analysis={currentAnalysis} />}
+
+            {/* Sub-Tab 4: Context */}
+            {resultsSubTab === 'context' && <ContextVerification analysis={currentAnalysis} />}
+
+            {/* Sub-Tab 5: Comparison */}
+            {resultsSubTab === 'comparison' && <MediaComparison analysis={currentAnalysis} />}
+
+            {/* Sub-Tab 6: Explorer */}
+            {resultsSubTab === 'explorer' && <EvidenceExplorer analysis={currentAnalysis} />}
+
+            {/* Sub-Tab 7: AI Assistant */}
+            {resultsSubTab === 'ai_assistant' && <GenAIExplanationPanel analysis={currentAnalysis} />}
+
           </div>
-        </div>
-      </section>
-
-      {/* Loading Overlay Integration */}
-      <AnimatePresence>
-        {isLoading && (
-          <LoadingOverlay
-            storyText={story}
-            onComplete={handleLoadingComplete}
-          />
         )}
-      </AnimatePresence>
+
+        {/* 5. LOGGED-IN DASHBOARD */}
+        {activeTab === 'dashboard' && (
+          <div className="animate-in fade-in duration-300">
+            <UserDashboard 
+              onNewAnalysis={() => setActiveTab('analyze')}
+              onSelectAnalysis={(res) => {
+                setCurrentAnalysis(res);
+                setActiveTab('results');
+                setResultsSubTab('overview');
+              }}
+            />
+          </div>
+        )}
+
+        {/* 6. VERIFICATION REPORT */}
+        {activeTab === 'report' && (
+          <div className="animate-in fade-in duration-300">
+            <VerificationReport analysis={currentAnalysis} />
+          </div>
+        )}
+
+        {/* 7. ABOUT / HOW IT WORKS */}
+        {activeTab === 'how-it-works' && (
+          <div className="animate-in fade-in duration-300">
+            <AboutHowItWorks onStartAnalysis={() => setActiveTab('analyze')} />
+          </div>
+        )}
+
+      </main>
+
+      {/* Footer */}
+      <Footer setActiveTab={setActiveTab} />
+
     </div>
   );
 }
+

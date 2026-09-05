@@ -1,103 +1,126 @@
-export type SchemeCategory = 
-  | 'all'
-  | 'pension'
-  | 'health'
-  | 'education'
-  | 'housing'
-  | 'livelihood'
-  | 'agriculture'
-  | 'women_child';
+export type MediaType = 'image' | 'audio' | 'video';
 
-export type ApplicationStatus = 'ready_today' | 'missing_docs' | 'needs_verification' | 'future_eligible';
+export type VerdictType = 
+  | 'LIKELY_MANIPULATED'
+  | 'STRONG_EVIDENCE_SYNTHETIC'
+  | 'LIKELY_AUTHENTIC'
+  | 'NEEDS_VERIFICATION'
+  | 'INCONCLUSIVE';
 
-export interface SchemeClauseCitation {
-  docName: string;
-  clauseNumber: string;
-  excerpt: string;
-  officialUrl?: string;
-}
+export type EvidenceStrength = 'HIGH' | 'MEDIUM' | 'LOW';
 
-export interface Scheme {
+export interface EvidenceItem {
   id: string;
+  category: 'visual' | 'technical' | 'ai_detection' | 'source' | 'context';
   title: string;
-  malayalamTitle?: string;
-  department: string;
-  stateOrCentral: 'Kerala State' | 'Central Scheme' | 'Kerala Joint (50:50)';
-  category: SchemeCategory;
-  estimatedAnnualValue: number; // in Rupees
-  confidenceScore: number; // 0 to 100
-  status: ApplicationStatus;
-  shortSummary: string;
-  whyEligible: string[];
-  whyNotOrPending: string[];
-  citation: SchemeClauseCitation;
-  requiredDocuments: string[];
-  howToApply: string;
-  officialPortalUrl?: string;
+  score: number; // 0-100
+  strength: EvidenceStrength;
+  summary: string;
+  detailText: string;
+  uncertaintyDisclaimer: string;
+  findings: string[];
 }
 
-export interface DocumentItem {
+export interface SourceNode {
   id: string;
+  date: string;
   name: string;
-  malayalamName?: string;
-  status: 'ready' | 'missing' | 'easy_to_obtain';
-  requiredForSchemes: string[]; // scheme titles or IDs
-  howToObtain: string;
-  issuingAuthority: string; // e.g., 'Village Office / Akshaya Kendra'
+  type: 'original' | 'article' | 'social_media' | 'upload';
+  url: string;
+  author: string;
+  similarityScore: number; // 0-100
+  credibility: 'High' | 'Medium' | 'Low' | 'Unknown';
+  contextSummary: string;
 }
 
-export interface RoadmapStep {
-  stepNumber: number;
-  title: string;
-  department: string;
-  actionRequired: string;
-  estimatedTime: string; // e.g. '3-5 Working Days'
-  dependencies: string[]; // e.g. ['Widow Certificate', 'Income Certificate']
-  associatedSchemes: string[];
-  priority: 'Immediate' | 'High' | 'Medium' | 'Low';
-  channel: 'Akshaya Kendra' | 'e-District Portal' | 'Gram Panchayat / Municipality' | 'School / College Office' | 'Bank Branch';
-}
-
-export interface UserProfileSummary {
-  state: string;
-  district?: string;
-  gender?: string;
-  maritalStatus?: string;
-  annualIncomeRupees?: number;
-  dependentsCount?: number;
-  childrenInSchool?: number;
-  rationCardType?: string;
-  occupation?: string;
-  age?: number;
-  rawStory: string;
-}
-
-export interface BenefitReport {
-  reportId: string;
-  createdAt: string;
-  userStory: string;
-  extractedProfile: UserProfileSummary;
-  benefitPotentialScore: number; // 0-100
-  scoreLabel: string; // e.g., "High Eligibility Potential"
-  estimatedAnnualBenefitsRupees: number;
-  applicationsReadyCount: number;
-  missingDocsCount: number;
-  schemes: Scheme[];
-  roadmap: RoadmapStep[];
-  documents: DocumentItem[];
-  clarifyingQuestionsAsked?: string[];
-  aiReasoningSummary: string;
-}
-
-export interface ClarifyingQuestionOption {
-  label: string;
-  value: string;
-  impactOnScore: string;
-}
-
-export interface ClarifyingQuestion {
+export interface ContextClaim {
   id: string;
-  question: string;
-  malayalamQuestion?: string;
-  options: ClarifyingQuestionOption[];
+  title: string;
+  publisher: string;
+  date: string;
+  url: string;
+  excerpt: string;
+  relationship: 'supports' | 'contradicts' | 'context' | 'unrelated';
+}
+
+export interface MetadataField {
+  key: string;
+  value: string;
+  status: 'normal' | 'suspicious' | 'missing' | 'verified';
+}
+
+export interface TimestampSegment {
+  startTime: string;
+  endTime: string;
+  secondsStart: number;
+  secondsEnd: number;
+  reason: string;
+  anomalyScore: number; // 0-100
+}
+
+export interface ComparisonDiff {
+  region: string;
+  type: 'added' | 'removed' | 'modified' | 'unchanged';
+  description: string;
+}
+
+export interface AnalysisResult {
+  id: string;
+  filename: string;
+  mediaType: MediaType;
+  fileSize: string;
+  resolutionOrDuration: string;
+  frameRateOrBitrate?: string;
+  uploadDate: string;
+  mediaUrl: string;
+  thumbnailUrl?: string;
+  
+  // High-level Verdict
+  verdict: VerdictType;
+  verdictLabel: string;
+  confidenceScore: number; // 0-100
+  evidenceStrength: EvidenceStrength;
+  whatThisMeans: string;
+  finalRecommendation: string;
+  
+  // Categorical Breakdown Scores
+  aiGenerationScore: number;
+  manipulationScore: number;
+  sourceConsistencyScore: number;
+  metadataConsistencyScore: number;
+  provenanceStatus: string;
+  
+  // Detailed Analysis Data
+  evidences: EvidenceItem[];
+  metadataFields: MetadataField[];
+  suspiciousTimestamps?: TimestampSegment[];
+  sources: SourceNode[];
+  contextClaims: ContextClaim[];
+  
+  // Comparison
+  comparisonOriginalUrl?: string;
+  comparisonDiffPercentage?: number;
+  comparisonDiffs?: ComparisonDiff[];
+
+  // Image Specific overlays
+  suspiciousOverlayUrl?: string;
+  
+  // Audio specific
+  audioWaveformPoints?: number[];
+  audioTranscript?: string;
+
+  // Video specific
+  faceTrackingActive?: boolean;
+  lipSyncAnomalyScore?: number;
+}
+
+export interface UserAnalysisHistoryItem {
+  id: string;
+  filename: string;
+  mediaType: MediaType;
+  uploadDate: string;
+  verdict: VerdictType;
+  verdictLabel: string;
+  confidenceScore: number;
+  thumbnailUrl?: string;
 }

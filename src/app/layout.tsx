@@ -1,41 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Scheme എവിടെ? – Kerala & Central Government Benefit Discovery Engine",
-  description:
-    "AI-powered statutory benefit reasoning platform. Describe your life situation in natural language and discover pensions, scholarships, healthcare, and housing schemes with clause-level citations.",
-  keywords: [
-    "Scheme എവിടെ",
-    "Kerala Government Schemes",
-    "Sevana Pension Kerala",
-    "e-Grantz Scholarship",
-    "Karunya Health Insurance KASP",
-    "LIFE Housing Mission",
-    "Widow Pension Kerala",
-  ],
-  authors: [{ name: "Scheme എവിടെ Team" }],
-  openGraph: {
-    title: "Scheme എവിടെ? – AI-Powered Government Benefit Discovery",
-    description:
-      "Get your personalized Family Benefit Report with Benefit Potential Score, estimated annual rupees, and step-by-step application roadmap.",
-    type: "website",
-  },
+  title: "VerifyAI | Don't Trust It. Verify It.",
+  description: "Advanced GenAI-powered digital media verification and forensics platform for detecting, understanding, tracing, and verifying synthetic or manipulated images, audio, and video.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-teal-500 selection:text-white">
-        <Header />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
+    <html lang="en" className="dark">
+      <body className="bg-obsidian text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-cyber-cyan selection:text-obsidian">
+        {children}
       </body>
     </html>
   );
