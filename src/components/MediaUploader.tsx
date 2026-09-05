@@ -66,7 +66,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           type: type,
           previewUrl: dataUrl,
           resolution: specs,
-          duration: type === 'audio' ? '00:24' : type === 'video' ? '00:30' : undefined
+          duration: undefined
         });
       };
       reader.readAsDataURL(file);
