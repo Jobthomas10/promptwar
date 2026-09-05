@@ -167,7 +167,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileInputChange} 
-        accept="image/*,audio/*,video/*" 
+        accept="video/*,image/*,audio/*,.mp4,.mov,.webm,.avi,.mkv,.mp3,.wav,.jpg,.jpeg,.png,.webp" 
         className="hidden" 
       />
 

@@ -55,16 +55,16 @@ export async function POST(request: Request) {
 
     let hasMediaToScan = false;
 
-    // Process base64 data URLs
-    if (mediaUrl && typeof mediaUrl === 'string' && mediaUrl.startsWith('data:image')) {
+    // Process base64 data URLs (images, videos, audio)
+    if (mediaUrl && typeof mediaUrl === 'string' && (mediaUrl.startsWith('data:image') || mediaUrl.startsWith('data:video') || mediaUrl.startsWith('data:audio'))) {
       try {
         const base64Parts = mediaUrl.split(',');
         const mimeMatch = mediaUrl.match(/data:(.*?);/);
-        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const mimeType = mimeMatch ? mimeMatch[1] : (validMediaType === 'video' ? 'video/mp4' : validMediaType === 'audio' ? 'audio/wav' : 'image/jpeg');
         const base64Data = base64Parts[1];
         
-        // Input validation: Enforce maximum payload buffer limit (25MB)
-        if (base64Data && base64Data.length < 35 * 1024 * 1024) {
+        // Enforce maximum payload buffer limit (100MB for video/audio streams)
+        if (base64Data && base64Data.length < 140 * 1024 * 1024) {
           const buffer = Buffer.from(base64Data, 'base64');
           const blob = new Blob([buffer], { type: mimeType });
           sightFormData.append('media', blob, cleanFilename);
@@ -121,8 +121,8 @@ export async function POST(request: Request) {
               fileSize: cleanFileSize,
               resolutionOrDuration: cleanSpecs,
               uploadDate: new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC',
-              mediaUrl: typeof mediaUrl === 'string' ? mediaUrl : undefined,
-              thumbnailUrl: typeof mediaUrl === 'string' ? mediaUrl : undefined,
+              mediaUrl: typeof mediaUrl === 'string' && mediaUrl ? mediaUrl : 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop',
+              thumbnailUrl: typeof mediaUrl === 'string' && mediaUrl ? mediaUrl : 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=400&auto=format&fit=crop',
 
               verdict: isFake ? 'STRONG_EVIDENCE_SYNTHETIC' : 'LIKELY_AUTHENTIC',
               verdictLabel: isFake ? 'STRONG EVIDENCE OF SYNTHETIC MEDIA' : 'LIKELY AUTHENTIC',

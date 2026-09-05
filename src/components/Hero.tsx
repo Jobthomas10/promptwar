@@ -149,7 +149,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
         type="file" 
         ref={heroFileInputRef} 
         onChange={handleFileInputChange} 
-        accept="image/*,audio/*,video/*" 
+        accept="video/*,image/*,audio/*,.mp4,.mov,.webm,.avi,.mkv,.mp3,.wav,.jpg,.jpeg,.png,.webp" 
         className="hidden" 
       />
 
@@ -274,15 +274,36 @@ export const Hero: React.FC<HeroProps> = ({ onStartAnalysis, onSeeHowItWorks, on
                 </button>
               </form>
 
-              {/* File upload action button */}
-              <div className="pt-2">
+              {/* File upload action buttons */}
+              <div className="flex flex-wrap justify-center gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); heroFileInputRef.current?.click(); }}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 border border-emerald-700 text-white font-semibold text-xs hover:bg-emerald-700 transition-all flex items-center space-x-2 shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (heroFileInputRef.current) {
+                      heroFileInputRef.current.accept = 'video/*,.mp4,.mov,.avi,.webm';
+                      heroFileInputRef.current.click();
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 border border-indigo-700 text-white font-bold text-xs hover:bg-indigo-700 transition-all flex items-center space-x-2 shadow-md"
                 >
-                  <Upload className="w-3.5 h-3.5 text-white" />
-                  <span>Select & Insert File</span>
+                  <Film className="w-4 h-4 text-white" />
+                  <span>Select & Upload Video File (.mp4, .mov, .webm)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (heroFileInputRef.current) {
+                      heroFileInputRef.current.accept = 'image/*,audio/*,video/*';
+                      heroFileInputRef.current.click();
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 border border-emerald-700 text-white font-bold text-xs hover:bg-emerald-700 transition-all flex items-center space-x-2 shadow-md"
+                >
+                  <Upload className="w-4 h-4 text-white" />
+                  <span>Browse All Media Files</span>
                 </button>
               </div>
 
